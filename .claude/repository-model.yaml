@@ -1,0 +1,380 @@
+version: 1
+
+facts:
+  languages:
+    - id: lang-python
+      value: Python 3.10-3.14
+      evidence:
+        - pyproject.toml#requires-python
+        - .python-version
+
+  frameworks:
+    - id: fw-asyncio
+      value: AsyncIO
+      evidence:
+        - pyproject.toml#classifiers
+        - src/smpclient/__init__.py
+    - id: fw-pytest
+      value: pytest
+      evidence:
+        - pyproject.toml#dependency-groups.dev
+        - pyproject.toml#tool.pytest.ini_options
+    - id: fw-pydantic
+      value: pydantic
+      evidence:
+        - src/smpclient/mcuboot.py
+        - src/smpclient/__init__.py
+    - id: fw-mkdocs-material
+      value: mkdocs-material
+      evidence:
+        - mkdocs.yaml
+        - pyproject.toml#dependency-groups.doc
+    - id: fw-hatchling
+      value: hatchling
+      evidence:
+        - pyproject.toml#build-system
+    - id: fw-taskipy
+      value: taskipy
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks
+        - pyproject.toml#dependency-groups.dev
+
+  commands:
+    - id: cmd-sync
+      name: sync
+      value: uv sync
+      evidence:
+        - README.md
+    - id: cmd-fix
+      name: fix
+      value: ruff check --fix . && ruff format .
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.fix
+    - id: cmd-format
+      name: format
+      value: ruff format .
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.format
+    - id: cmd-lint
+      name: lint
+      value: ruff check . && pydoclint src/smpclient
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.lint
+    - id: cmd-typecheck
+      name: typecheck
+      value: mypy .
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.typecheck
+    - id: cmd-test
+      name: test
+      value: pytest --maxfail=1
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.test
+    - id: cmd-coverage
+      name: coverage
+      value: pytest --cov --cov-report=xml --cov-report=term-missing
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.coverage
+    - id: cmd-all
+      name: all
+      value: task format && task lint && task typecheck && task test
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.all
+    - id: cmd-matrix
+      name: matrix
+      value: uv run task matrix
+      evidence:
+        - README.md
+        - pyproject.toml#tool.taskipy.tasks.matrix
+    - id: cmd-build
+      name: build
+      value: uv build
+      evidence:
+        - .github/workflows/test.yaml
+        - .github/workflows/release.yaml
+
+  entry_points:
+    - id: entry-smp-client
+      value: src/smpclient/__init__.py
+      evidence:
+        - src/smpclient/__init__.py
+        - README.md
+    - id: entry-mcuimg
+      value: src/smpclient/mcuboot.py
+      evidence:
+        - pyproject.toml#project.scripts
+        - src/smpclient/mcuboot.py
+    - id: entry-smpbumble
+      value: src/smpclient/transport/bumble/__main__.py
+      evidence:
+        - pyproject.toml#project.scripts
+        - src/smpclient/transport/bumble/__main__.py
+
+  components:
+    - id: comp-smpclient
+      name: smpclient
+      path: src/smpclient
+      evidence:
+        - src/smpclient/__init__.py
+        - pyproject.toml
+    - id: comp-transport
+      name: transport
+      path: src/smpclient/transport
+      evidence:
+        - src/smpclient/transport/__init__.py
+        - src/smpclient/transport/serial.py
+        - src/smpclient/transport/ble.py
+        - src/smpclient/transport/udp.py
+    - id: comp-requests
+      name: requests
+      path: src/smpclient/requests
+      evidence:
+        - src/smpclient/requests/image_management.py
+        - src/smpclient/requests/os_management.py
+        - src/smpclient/requests/file_management.py
+    - id: comp-examples
+      name: examples
+      path: examples
+      evidence:
+        - examples/README.md
+        - examples/ble/helloworld.py
+        - examples/usb/upgrade.py
+    - id: comp-tests
+      name: tests
+      path: tests
+      evidence:
+        - tests/test_smp_client.py
+        - tests/test_smp_ble_transport.py
+        - pyproject.toml#tool.pytest.ini_options
+    - id: comp-dutfirmware
+      name: dutfirmware
+      path: dutfirmware
+      evidence:
+        - dutfirmware/README.md
+        - dutfirmware/envr-default
+    - id: comp-docs
+      name: docs
+      path: docs
+      evidence:
+        - docs/index.md
+        - mkdocs.yaml
+        - docs/_generate_requests_docstrings.py
+
+  dependencies:
+    - id: dep-smp
+      name: smp
+      type: external
+      evidence:
+        - pyproject.toml#dependencies
+    - id: dep-intelhex
+      name: intelhex
+      type: external
+      evidence:
+        - pyproject.toml#dependencies
+        - src/smpclient/mcuboot.py
+    - id: dep-pyserial
+      name: pyserial
+      type: external
+      evidence:
+        - pyproject.toml#project.optional-dependencies.serial
+        - src/smpclient/transport/serial.py
+    - id: dep-bleak
+      name: bleak
+      type: external
+      evidence:
+        - pyproject.toml#project.optional-dependencies.ble
+        - src/smpclient/transport/ble.py
+    - id: dep-bumble
+      name: bumble
+      type: external
+      evidence:
+        - pyproject.toml#project.optional-dependencies.bumble
+        - src/smpclient/transport/bumble/__init__.py
+    - id: dep-zephyr-hci
+      name: zephyr-4.4.0-hci
+      type: external
+      evidence:
+        - pyproject.toml#project.optional-dependencies.hci_firmware
+        - src/smpclient/transport/firmware/hci.py
+    - id: dep-async-timeout
+      name: async-timeout
+      type: external
+      evidence:
+        - pyproject.toml#dependencies
+        - src/smpclient/__init__.py
+
+  external_services:
+    - id: svc-smp-server
+      value: MCU SMP server (serial, BLE, or UDP)
+      evidence:
+        - README.md
+        - src/smpclient/__init__.py
+        - src/smpclient/transport/__init__.py
+    - id: svc-pypi
+      value: PyPI package distribution
+      evidence:
+        - README.md
+        - .github/workflows/release.yaml
+        - pyproject.toml#project.urls
+
+  testing:
+    - id: test-pytest
+      framework: pytest
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.test
+        - pyproject.toml#dependency-groups.dev
+        - tests/test_smp_client.py
+    - id: test-pytest-asyncio
+      framework: pytest-asyncio
+      evidence:
+        - pyproject.toml#dependency-groups.dev
+    - id: test-pytest-cov
+      framework: pytest-cov
+      evidence:
+        - pyproject.toml#tool.taskipy.tasks.coverage
+        - pyproject.toml#tool.coverage.report
+    - id: test-github-actions
+      framework: GitHub Actions CI
+      evidence:
+        - .github/workflows/test.yaml
+        - .github/workflows/test-docs.yaml
+
+analysis:
+  purpose:
+    value: "Python library providing SMP transport and high-level client APIs so applications can manage MCU firmware, files, and configuration over serial, BLE, or UDP."
+    confidence: high
+    evidence_refs:
+      - lang-python
+      - entry-smp-client
+      - comp-smpclient
+      - comp-transport
+      - svc-smp-server
+
+  architecture:
+    value: "SMPClient wraps an SMPTransport Protocol implementation (serial/BLE/UDP/bumble), encodes typed requests from smpclient.requests (thin wrappers over the smp package), and returns validated responses narrowed via success/error helpers. Optional extras gate heavy transport deps; mcuimg and smpbumble are CLI entry points."
+    confidence: high
+    evidence_refs:
+      - entry-smp-client
+      - comp-transport
+      - comp-requests
+      - dep-smp
+      - entry-mcuimg
+      - entry-smpbumble
+      - fw-asyncio
+
+  patterns:
+    - id: pat-request-wrapper
+      value: "Request classes inherit smp message types plus a local _GroupBase/_ImageGroupBase that binds _Response, _ErrorV1, and _ErrorV2 for typed client.request returns."
+      confidence: high
+      evidence_refs:
+        - comp-requests
+        - dep-smp
+    - id: pat-transport-extras
+      value: "Optional transports raise ImportError naming the required extra (smpclient[serial], smpclient[ble], smpclient[bumble], smpclient[hci_firmware]) when their dependency is missing; UDP has no extra."
+      confidence: high
+      evidence_refs:
+        - dep-pyserial
+        - dep-bleak
+        - dep-bumble
+        - dep-zephyr-hci
+        - comp-transport
+    - id: pat-success-error-narrowing
+      value: "Callers narrow SMPClient.request results with success()/error()/error_v1()/error_v2() TypeIs helpers from smpclient.generics rather than catching exceptions for protocol errors."
+      confidence: high
+      evidence_refs:
+        - entry-smp-client
+        - comp-examples
+    - id: pat-taskipy-uv
+      value: "Dev workflow is uv sync plus uv run task <name> for fix/all/matrix (task bodies defined under tool.taskipy.tasks)."
+      confidence: high
+      evidence_refs:
+        - cmd-sync
+        - cmd-fix
+        - cmd-all
+        - fw-taskipy
+
+  component_notes:
+    - ref: comp-smpclient
+      purpose: "Core SMPClient async API for connect/request/upload/download and shared generics/exceptions/mcuboot image tools."
+      confidence: high
+    - ref: comp-transport
+      purpose: "SMPTransport Protocol and concrete serial, BLE (bleak), UDP, and bumble HCI transports plus bundled HCI firmware re-export."
+      confidence: high
+    - ref: comp-requests
+      purpose: "Thin typed request wrappers for standard mcumgr groups and Intercreate user-group uploads."
+      confidence: high
+    - ref: comp-examples
+      purpose: "Runnable BLE/USB/UDP samples and DUT image assets demonstrating client usage against smp_svr firmware."
+      confidence: high
+    - ref: comp-tests
+      purpose: "Unit/integration-style pytest suite covering client, transports, requests, mcuboot tools, and extras."
+      confidence: high
+    - ref: comp-dutfirmware
+      purpose: "Zephyr/west overlay configs and env helpers to build SMP DUT firmware for manual/hardware testing; excluded from ruff/mypy/pytest."
+      confidence: high
+    - ref: comp-docs
+      purpose: "MkDocs Material API docs generated from package docstrings via mkdocstrings and a request-docstring generator script."
+      confidence: high
+
+  service_notes:
+    - ref: svc-smp-server
+      purpose: "Remote MCU running an SMP/mcumgr server that the client addresses over serial path, BLE MAC/UUID, or UDP host:port."
+      integration: "Pass transport instance and address into SMPClient; connect negotiates buffer size then exchanges framed SMP messages."
+      confidence: high
+    - ref: svc-pypi
+      purpose: "Public distribution channel for the smpclient package and optional extras."
+      integration: "GitHub Release workflow builds with uv and publishes via trusted publishing to PyPI."
+      confidence: high
+
+  dangerous_areas:
+    - id: danger-upgrade-confirm
+      value: "SMPClient.upload(..., upgrade=True) marks the image confirmed during upload"
+      reason: "Docstring warns this can cause a boot-loop that bricks the device; default False and confirm from the upgraded app instead."
+      confidence: high
+      evidence_refs:
+        - entry-smp-client
+    - id: danger-optional-extras
+      value: "Importing serial/BLE/bumble/hci modules without matching extras fails at import time"
+      reason: "Transports intentionally raise ImportError; CI has a dedicated transport-extras matrix to verify pass/fail combinations."
+      confidence: high
+      evidence_refs:
+        - dep-pyserial
+        - dep-bleak
+        - dep-bumble
+        - test-github-actions
+    - id: danger-coverage-gate
+      value: "Coverage fail_under is 91 percent"
+      reason: "pytest-cov reports fail the job below 91; new untested paths can break CI even when unit tests pass."
+      confidence: high
+      evidence_refs:
+        - test-pytest-cov
+        - cmd-coverage
+    - id: danger-upload-sha-mtu
+      value: "First ImageUploadWrite with use_sha=True can fail on small MTUs"
+      reason: "SMPClient.upload docstring notes Zephyr SMP server returns MGMT_ERR.EINVAL when MTU cannot fit SHA256 plus the first 32 image bytes; raise MTU or set use_sha=False."
+      confidence: high
+      evidence_refs:
+        - entry-smp-client
+
+  questions:
+    - id: q-fork-vs-upstream
+      question: "This checkout remotes to LiveViewTech/smpclient while pyproject/README/docs point at intercreate/smpclient. What is the intended fork relationship and which remote should agents treat as upstream?"
+      area: ownership
+      priority: high
+      evidence_refs:
+        - svc-pypi
+        - entry-smp-client
+    - id: q-intercreate-lvt-usage
+      question: "What does the Intercreate user-group upload path mean for LiveViewTech product firmware, and is ICUploadClient used in LVT systems?"
+      area: extensions
+      priority: medium
+      evidence_refs:
+        - comp-requests
+        - comp-smpclient
+    - id: q-dutfirmware-maintenance
+      question: "Is dutfirmware still actively maintained as part of this repo's CI/dev loop, or only for manual hardware bring-up outside automated tests?"
+      area: testing
+      priority: low
+      evidence_refs:
+        - comp-dutfirmware
+        - test-pytest
