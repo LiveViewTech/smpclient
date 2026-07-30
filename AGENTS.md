@@ -32,11 +32,11 @@ Task bodies live in `pyproject.toml` under `[tool.taskipy.tasks]`. CI runs lint/
 
 ## Directory Map
 
-- `src/smpclient/` → see `src/smpclient/AGENTS.md`
-- `src/smpclient/transport/` → see `src/smpclient/transport/AGENTS.md`
-- `examples/` → see `examples/AGENTS.md`
-- `tests/` → see `tests/AGENTS.md`
-- `dutfirmware/` → see `dutfirmware/AGENTS.md`
+- `src/smpclient/` → `SMPClient`, requests, MCUBoot helpers (`mcuimg`), Intercreate extension
+- `src/smpclient/transport/` → serial/BLE/UDP/bumble transports; UDP default port `1337`
+- `examples/` → BLE/USB/UDP samples; prebuilt DUT assets under `examples/duts/`
+- `tests/` → pytest suite (mocked transports; fixtures under `tests/fixtures/`)
+- `dutfirmware/` → Zephyr/west DUT overlays; run setup from that dir (see `dutfirmware/README.md`)
 - `docs/` → MkDocs sources; build via `.github/workflows/test-docs.yaml`
 
 ## Gotchas
